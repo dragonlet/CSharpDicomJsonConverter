@@ -15,5 +15,7 @@ Put root -> fo-dicom
 
          -> CSharpDicomJsonConverter
          
+         In other words, fo-dicom and the CSharpDicomJsonConverter directories are under the root.
+         
 Doing so should allow the Visual Studio (2010) solution to load fo-dicom and this project without a need to change the project layout.
 
