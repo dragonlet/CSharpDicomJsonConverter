@@ -44,7 +44,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\fo-dicom\DICOM\DICOM.csproj">
+    <ProjectReference Include="..\..\fo-dicom\DICOM\DICOM.csproj">
       <Project>{D6E309B0-4837-459E-8C85-ABC268440D62}</Project>
       <Name>DICOM</Name>
     </ProjectReference>
