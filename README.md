@@ -12,6 +12,7 @@ To Build:
 Download fo-dicom from https://github.com/rcd/fo-dicom
 
 Put root -> fo-dicom
+
          -> CSharpDicomJsonConverter
          
 Doing so should allow the Visual Studio (2010) solution to load fo-dicom and this project without a need to change the project layout.
