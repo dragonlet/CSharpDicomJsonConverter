@@ -16,6 +16,14 @@ namespace JsonConverter
             return sb.ToString();
         }
 
+        public static String Convert(DicomDataset dataSet, Boolean addCrLf = true,
+            int excludeElementsLargerThanBytes = 1024)
+        {
+            var sb = new StringBuilder();
+            new DicomDatasetWalker(dataSet).Walk(new ToStringWalker(sb, addCrLf, excludeElementsLargerThanBytes));
+            return sb.ToString();
+        }
+        
         private class ToStringWalker : IDicomDatasetWalker
         {
             private readonly String _crlf = "";
@@ -204,7 +212,7 @@ namespace JsonConverter
 
             private static string EnQuote(String v)
             {
-                return "\"" + v + "\"";
+                return "\"" + v.Replace("\"", "&quot;")  + "\"";
             }
 
             public override string ToString()
