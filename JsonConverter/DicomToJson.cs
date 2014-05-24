@@ -30,7 +30,7 @@ namespace JsonConverter
             private readonly int _maxBytes;
             private readonly StringBuilder _sb;
             private int _level;
-            private int _totalEmements;
+            private Boolean _firstElement = true;
 
             public ToStringWalker(StringBuilder sb, Boolean addCrLf = true, int maxElementSizeBytes = 1024)
             {
@@ -63,11 +63,14 @@ namespace JsonConverter
             public bool OnElement(DicomElement element)
             {
                 var v = new StringBuilder();
-                if (_totalEmements > 0)
+                if (_firstElement == false)
                 {
-                    v.AppendFormat(",{0}", _crlf);
+                    v.AppendFormat(",{0}", _crlf);       
                 }
-                _totalEmements++;
+                else
+                {
+                    _firstElement = false;
+                }
                 v.Append(Brace("{"));
                 v.Append(_crlf);
                 var tag = String.Format("{0:X04}{1:X04}", element.Tag.Group, element.Tag.Element);
@@ -90,8 +93,11 @@ namespace JsonConverter
 
                         foreach (string ev in vals)
                         {
+                            // String must be trimmed due to even-byte rules of DICOM and some vendors put \0 into the string
+                            // which will cause an ill effect in JSON.
+                            string ev2 = ev.Trim();
                             if (count > 0) v.Append(", ");
-                            v.Append(isString ? EnQuote(ev) : ev);
+                            v.Append(isString ? EnQuote(ev2) : ev2);
                             count++;
                         }
                     }
@@ -105,6 +111,7 @@ namespace JsonConverter
 
                         foreach (string ev in vals)
                         {
+                            var ev2 = ev.Trim();
                             if (multiNameField)
                             {
                                 v.Append(", ");
@@ -116,7 +123,7 @@ namespace JsonConverter
                             v.Append(_crlf);
                             Level++;
                             v.Append(Indent);
-                            v.AppendFormat("{0}: {1}", EnQuote("Alphabetic"), EnQuote(ev));
+                            v.AppendFormat("{0}: {1}", EnQuote("Alphabetic"), EnQuote(ev2));
                             Level--;
                             v.Append(_crlf);
                             v.Append(Brace("}"));
@@ -140,6 +147,7 @@ namespace JsonConverter
 
             public bool OnBeginSequence(DicomSequence sequence)
             {
+                _firstElement = true;
                 var v = new StringBuilder();
                 v.AppendFormat("{0}", _crlf);
                 v.Append(Brace("{"));
