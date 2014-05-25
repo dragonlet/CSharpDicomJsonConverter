@@ -1,11 +1,15 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonConverter", "JsonConverter\JsonConverter.csproj", "{79DC4DA2-875E-46B5-8746-42B9C7EED0D2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomFile2Json", "DicomFile2Json\DicomFile2Json.csproj", "{B41DB6F9-DA28-465A-B1BF-452BA6184217}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DICOM", "..\fo-dicom\DICOM\DICOM.csproj", "{D6E309B0-4837-459E-8C85-ABC268440D62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomJsonQuery", "JsonToDicom\DicomJsonQuery.csproj", "{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +51,16 @@ Global
 		{D6E309B0-4837-459E-8C85-ABC268440D62}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{D6E309B0-4837-459E-8C85-ABC268440D62}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{D6E309B0-4837-459E-8C85-ABC268440D62}.Release|x86.ActiveCfg = Release|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{6F3793A0-1C02-4340-A450-E10AC5B6B7CE}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

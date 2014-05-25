@@ -2,25 +2,33 @@
 using System.Text;
 using Dicom;
 using Dicom.IO.Buffer;
+using Dicom.Network;
 
 namespace JsonConverter
 {
     public class DicomToJson
     {
-        public static String Convert(String fileName, Boolean addCrLf = true,
+        [Flags]
+        public enum OutputFormat
+        {
+            AddLinefeeds = 0x1,
+            QIDOFormat = 0x2
+        };
+
+        public static String Convert(String fileName, OutputFormat format = OutputFormat.AddLinefeeds,
             int excludeElementsLargerThanBytes = 1024)
         {
             var sb = new StringBuilder();
             DicomFile file = DicomFile.Open(fileName);
-            new DicomDatasetWalker(file.Dataset).Walk(new ToStringWalker(sb, addCrLf, excludeElementsLargerThanBytes));
+            new DicomDatasetWalker(file.Dataset).Walk(new ToStringWalker(sb, format, excludeElementsLargerThanBytes));
             return sb.ToString();
         }
 
-        public static String Convert(DicomDataset dataSet, Boolean addCrLf = true,
+        public static String Convert(DicomDataset dataSet, OutputFormat format = OutputFormat.AddLinefeeds,
             int excludeElementsLargerThanBytes = 1024)
         {
             var sb = new StringBuilder();
-            new DicomDatasetWalker(dataSet).Walk(new ToStringWalker(sb, addCrLf, excludeElementsLargerThanBytes));
+            new DicomDatasetWalker(dataSet).Walk(new ToStringWalker(sb, format, excludeElementsLargerThanBytes));
             return sb.ToString();
         }
         
@@ -31,11 +39,13 @@ namespace JsonConverter
             private readonly StringBuilder _sb;
             private int _level;
             private Boolean _firstElement = true;
+            private readonly Boolean _qidoBrace = false;
 
-            public ToStringWalker(StringBuilder sb, Boolean addCrLf = true, int maxElementSizeBytes = 1024)
+            public ToStringWalker(StringBuilder sb, OutputFormat format, int maxElementSizeBytes = 1024)
             {
                 _maxBytes = maxElementSizeBytes;
-                if (addCrLf) _crlf = "\r\n";
+                if ((format & OutputFormat.AddLinefeeds) != 0) _crlf = "\r\n";
+                if ((format & OutputFormat.QIDOFormat) != 0) _qidoBrace = true;
                 _sb = sb;
             }
 
@@ -56,7 +66,12 @@ namespace JsonConverter
 
             public void OnBeginWalk(DicomDatasetWalker walker, DicomDatasetWalkerCallback callback)
             {
-                _sb.AppendFormat("[{0}", _crlf);
+                if (_qidoBrace) _sb.AppendFormat("[{0}", _crlf);
+                else
+                {
+                    _sb.Append("{");
+                    _sb.Append(_crlf);
+                }
                 Level++;
             }
 
@@ -71,8 +86,13 @@ namespace JsonConverter
                 {
                     _firstElement = false;
                 }
-                v.Append(Brace("{"));
-                v.Append(_crlf);
+                
+                if (_qidoBrace)
+                {
+                    v.Append(Brace("{"));
+                    v.Append(_crlf);
+                }
+                
                 var tag = String.Format("{0:X04}{1:X04}", element.Tag.Group, element.Tag.Element);
                 v.AppendFormat("{0}\"{1}\": ", Indent, tag);
                 v.Append(Brace("{", false));
@@ -95,7 +115,7 @@ namespace JsonConverter
                         {
                             // String must be trimmed due to even-byte rules of DICOM and some vendors put \0 into the string
                             // which will cause an ill effect in JSON.
-                            string ev2 = ev.Trim();
+                            string ev2 = ev.Trim('\0');
                             if (count > 0) v.Append(", ");
                             v.Append(isString ? EnQuote(ev2) : ev2);
                             count++;
@@ -111,7 +131,7 @@ namespace JsonConverter
 
                         foreach (string ev in vals)
                         {
-                            var ev2 = ev.Trim();
+                            var ev2 = ev.Trim('\0');
                             if (multiNameField)
                             {
                                 v.Append(", ");
@@ -138,8 +158,13 @@ namespace JsonConverter
                 }
                 v.Append("]");
                 v.Append(_crlf);
-                v.Append(Brace("}"));
-                v.Append(_crlf);
+                
+                if (_qidoBrace)
+                { 
+                    v.Append(Brace("}"));
+                    v.Append(_crlf);
+                }
+                
                 v.Append(Brace("}"));
                 _sb.Append(v);
                 return true;
@@ -147,11 +172,21 @@ namespace JsonConverter
 
             public bool OnBeginSequence(DicomSequence sequence)
             {
-                _firstElement = true;
                 var v = new StringBuilder();
-                v.AppendFormat("{0}", _crlf);
-                v.Append(Brace("{"));
-                v.Append(_crlf);
+
+                if (_firstElement == false)
+                {
+                    v.AppendFormat(",{0}", _crlf);
+                }
+ 
+                _firstElement = true;
+                if (_qidoBrace)
+                {
+                    v.AppendFormat("{0}", _crlf);
+                    v.Append(Brace("{"));
+                    v.Append(_crlf);
+                }
+                
                 string tag = String.Format("{0:X04}{1:X04}", sequence.Tag.Group, sequence.Tag.Element);
                 v.AppendFormat("{0}\"{1}\": ", Indent, tag);
                 v.Append(Brace("{", false));
@@ -161,7 +196,7 @@ namespace JsonConverter
                 v.Append(_crlf);
                 v.AppendFormat("{0}{1}:", Indent, EnQuote("Values"));
 
-                v.Append(" [");
+                v.Append(" [{");
                 v.Append(_crlf);
                 _sb.Append(v);
                 return true;
@@ -180,10 +215,14 @@ namespace JsonConverter
             public bool OnEndSequence()
             {
                 var v = new StringBuilder();
-                v.Append("]");
+                v.Append("}]");
                 v.Append(_crlf);
-                v.Append(Brace("}"));
-                v.Append(_crlf);
+                if (_qidoBrace)
+                {
+                    v.Append(Brace("}"));
+                    v.Append(_crlf);
+                }
+                
                 v.Append(Brace("}"));
                 _sb.Append(v);
                 return true;
@@ -215,7 +254,14 @@ namespace JsonConverter
 
             public void OnEndWalk()
             {
-                _sb.AppendFormat("{0}]{1}", _crlf, _crlf);
+                if (_qidoBrace)
+                { _sb.AppendFormat("]{0}", _crlf);}
+                else
+                {
+                    _sb.Append(_crlf);
+                    _sb.Append("}");
+                    _sb.Append(_crlf);
+                }
             }
 
             private static string EnQuote(String v)
@@ -250,5 +296,6 @@ namespace JsonConverter
                 return brace;
             }
         }
+
     }
 }

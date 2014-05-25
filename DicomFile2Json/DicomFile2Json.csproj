@@ -47,6 +47,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\fo-dicom\DICOM\DICOM.csproj">
+      <Project>{d6e309b0-4837-459e-8c85-abc268440d62}</Project>
+      <Name>DICOM</Name>
+    </ProjectReference>
     <ProjectReference Include="..\JsonConverter\JsonConverter.csproj">
       <Project>{79DC4DA2-875E-46B5-8746-42B9C7EED0D2}</Project>
       <Name>JsonConverter</Name>
