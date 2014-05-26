@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Dicom;
 using Dicom.IO.Buffer;
-using Dicom.Network;
 
 namespace JsonConverter
 {
@@ -32,15 +31,16 @@ namespace JsonConverter
             new DicomDatasetWalker(dataSet).Walk(new ToStringWalker(sb, format, excludeElementsLargerThanBytes));
             return sb.ToString();
         }
-        
+
         private class ToStringWalker : IDicomDatasetWalker
         {
             private readonly String _crlf = "";
+            private readonly Stack<int> _localElementCount = new Stack<int>();
+            private readonly Stack<int> _localItemCount = new Stack<int>();
             private readonly int _maxBytes;
+            private readonly Boolean _qidoBrace;
             private readonly StringBuilder _sb;
             private int _level;
-            
-            private readonly Boolean _qidoBrace = false;
 
             public ToStringWalker(StringBuilder sb, OutputFormat format, int maxElementSizeBytes = 1024)
             {
@@ -65,10 +65,6 @@ namespace JsonConverter
 
             private string Indent { get; set; }
 
-            private Stack<int> _localElementCount = new Stack<int>();
-            private Stack<int> _localItemCount = new Stack<int>();  
-
-
             public void OnBeginWalk(DicomDatasetWalker walker, DicomDatasetWalkerCallback callback)
             {
                 if (_qidoBrace) _sb.AppendFormat("[{0}", _crlf);
@@ -83,7 +79,6 @@ namespace JsonConverter
                 _localItemCount.Push(0);
             }
 
- 
             public bool OnElement(DicomElement element)
             {
                 var v = new StringBuilder();
@@ -92,27 +87,26 @@ namespace JsonConverter
 
                 if (eCount > 0)
                 {
-                    v.AppendFormat(",{0}", _crlf);       
+                    v.AppendFormat(",{0}", _crlf);
                 }
 
                 eCount++;
                 _localElementCount.Push(eCount);
-            
+
                 if (_qidoBrace)
                 {
                     v.Append(Brace("{"));
                     v.Append(_crlf);
                 }
-                
-                var tag = String.Format("{0:X04}{1:X04}", element.Tag.Group, element.Tag.Element);
+
+                string tag = String.Format("{0:X04}{1:X04}", element.Tag.Group, element.Tag.Element);
                 if (tag == "0040A30A")
                 {
-                    
                 }
                 v.AppendFormat("{0}\"{1}\": ", Indent, tag);
                 v.Append(Brace("{", false));
                 v.Append(_crlf);
-                var vr = element.ValueRepresentation.ToString();
+                string vr = element.ValueRepresentation.ToString();
                 bool isString = element.ValueRepresentation.IsString;
                 v.AppendFormat("{0}{1}:{2},", Indent, EnQuote("vr"), EnQuote(vr));
                 v.Append(_crlf);
@@ -141,12 +135,12 @@ namespace JsonConverter
                         bool multiNameField = false;
 
                         var vals = element.Get<string[]>();
-                        
+
                         v.Append(_crlf);
 
                         foreach (string ev in vals)
                         {
-                            var ev2 = ev.Trim('\0');
+                            string ev2 = ev.Trim('\0');
                             if (multiNameField)
                             {
                                 v.Append(", ");
@@ -173,13 +167,13 @@ namespace JsonConverter
                 }
                 v.Append("]");
                 v.Append(_crlf);
-                
+
                 if (_qidoBrace)
-                { 
+                {
                     v.Append(Brace("}"));
                     v.Append(_crlf);
                 }
-                
+
                 v.Append(Brace("}"));
                 _sb.Append(v);
                 return true;
@@ -189,8 +183,8 @@ namespace JsonConverter
             {
                 var v = new StringBuilder();
 
-                var eCount = _localElementCount.Pop();
-                
+                int eCount = _localElementCount.Pop();
+
                 if (eCount > 0)
                 {
                     v.AppendFormat(",{0}", _crlf);
@@ -203,7 +197,7 @@ namespace JsonConverter
                 _localElementCount.Push(++eCount);
                 _localElementCount.Push(0);
                 _localItemCount.Push(0);
-             
+
                 string tag = String.Format("{0:X04}{1:X04}", sequence.Tag.Group, sequence.Tag.Element);
                 v.AppendFormat("{0}\"{1}\": ", Indent, tag);
                 v.Append(Brace("{", false));
@@ -221,13 +215,13 @@ namespace JsonConverter
 
             public bool OnBeginSequenceItem(DicomDataset dataset)
             {
-                var iCount = _localItemCount.Pop();                
+                int iCount = _localItemCount.Pop();
                 if (iCount > 0)
                     _sb.AppendFormat(",{0}", _crlf);
-                _localItemCount.Push(++iCount);  
-                _localElementCount.Push(0);         
+                _localItemCount.Push(++iCount);
+                _localElementCount.Push(0);
                 _sb.Append(Brace("{"));
-                _sb.Append(_crlf );
+                _sb.Append(_crlf);
                 return true;
             }
 
@@ -278,7 +272,9 @@ namespace JsonConverter
             public void OnEndWalk()
             {
                 if (_qidoBrace)
-                { _sb.AppendFormat("]{0}", _crlf);}
+                {
+                    _sb.AppendFormat("]{0}", _crlf);
+                }
                 else
                 {
                     _sb.Append(_crlf);
@@ -289,7 +285,7 @@ namespace JsonConverter
 
             private static string EnQuote(String v)
             {
-                return "\"" + v.Replace("\"", "&quot;")  + "\"";
+                return "\"" + v.Replace("\"", "&quot;") + "\"";
             }
 
             public override string ToString()
@@ -319,6 +315,5 @@ namespace JsonConverter
                 return brace;
             }
         }
-
     }
 }
