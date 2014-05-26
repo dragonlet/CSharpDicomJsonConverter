@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using Dicom;
 using Dicom.IO.Buffer;
@@ -38,7 +39,7 @@ namespace JsonConverter
             private readonly int _maxBytes;
             private readonly StringBuilder _sb;
             private int _level;
-            private Boolean _firstElement = true;
+            
             private readonly Boolean _qidoBrace = false;
 
             public ToStringWalker(StringBuilder sb, OutputFormat format, int maxElementSizeBytes = 1024)
@@ -64,6 +65,10 @@ namespace JsonConverter
 
             private string Indent { get; set; }
 
+            private Stack<int> _localElementCount = new Stack<int>();
+            private Stack<int> _localItemCount = new Stack<int>();  
+
+
             public void OnBeginWalk(DicomDatasetWalker walker, DicomDatasetWalkerCallback callback)
             {
                 if (_qidoBrace) _sb.AppendFormat("[{0}", _crlf);
@@ -73,20 +78,26 @@ namespace JsonConverter
                     _sb.Append(_crlf);
                 }
                 Level++;
+
+                _localElementCount.Push(0);
+                _localItemCount.Push(0);
             }
 
+ 
             public bool OnElement(DicomElement element)
             {
                 var v = new StringBuilder();
-                if (_firstElement == false)
+
+                int eCount = _localElementCount.Pop();
+
+                if (eCount > 0)
                 {
                     v.AppendFormat(",{0}", _crlf);       
                 }
-                else
-                {
-                    _firstElement = false;
-                }
-                
+
+                eCount++;
+                _localElementCount.Push(eCount);
+            
                 if (_qidoBrace)
                 {
                     v.Append(Brace("{"));
@@ -94,6 +105,10 @@ namespace JsonConverter
                 }
                 
                 var tag = String.Format("{0:X04}{1:X04}", element.Tag.Group, element.Tag.Element);
+                if (tag == "0040A30A")
+                {
+                    
+                }
                 v.AppendFormat("{0}\"{1}\": ", Indent, tag);
                 v.Append(Brace("{", false));
                 v.Append(_crlf);
@@ -174,19 +189,21 @@ namespace JsonConverter
             {
                 var v = new StringBuilder();
 
-                if (_firstElement == false)
+                var eCount = _localElementCount.Pop();
+                
+                if (eCount > 0)
                 {
                     v.AppendFormat(",{0}", _crlf);
                 }
- 
-                _firstElement = true;
-                if (_qidoBrace)
+                else
                 {
-                    v.AppendFormat("{0}", _crlf);
-                    v.Append(Brace("{"));
                     v.Append(_crlf);
                 }
-                
+
+                _localElementCount.Push(++eCount);
+                _localElementCount.Push(0);
+                _localItemCount.Push(0);
+             
                 string tag = String.Format("{0:X04}{1:X04}", sequence.Tag.Group, sequence.Tag.Element);
                 v.AppendFormat("{0}\"{1}\": ", Indent, tag);
                 v.Append(Brace("{", false));
@@ -196,7 +213,7 @@ namespace JsonConverter
                 v.Append(_crlf);
                 v.AppendFormat("{0}{1}:", Indent, EnQuote("Values"));
 
-                v.Append(" [{");
+                v.Append(" [");
                 v.Append(_crlf);
                 _sb.Append(v);
                 return true;
@@ -204,27 +221,33 @@ namespace JsonConverter
 
             public bool OnBeginSequenceItem(DicomDataset dataset)
             {
+                var iCount = _localItemCount.Pop();                
+                if (iCount > 0)
+                    _sb.AppendFormat(",{0}", _crlf);
+                _localItemCount.Push(++iCount);  
+                _localElementCount.Push(0);         
+                _sb.Append(Brace("{"));
+                _sb.Append(_crlf );
                 return true;
             }
 
             public bool OnEndSequenceItem()
             {
+                _localElementCount.Pop();
+                _sb.AppendFormat("{0}", _crlf);
+                _sb.Append(Brace("}"));
                 return true;
             }
 
             public bool OnEndSequence()
             {
                 var v = new StringBuilder();
-                v.Append("}]");
+                v.Append("]");
                 v.Append(_crlf);
-                if (_qidoBrace)
-                {
-                    v.Append(Brace("}"));
-                    v.Append(_crlf);
-                }
-                
                 v.Append(Brace("}"));
                 _sb.Append(v);
+                _localElementCount.Pop();
+                _localItemCount.Pop();
                 return true;
             }
 
