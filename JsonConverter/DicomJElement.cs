@@ -2,14 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using Dicom;
 
 namespace JsonConverter
 {
+
     public class DicomJElement
     {
         public String Tag = "";
         public JObject Element;
         public List<Dictionary<string, DicomJElement>> sqElements = new List<Dictionary<string, DicomJElement>>();
+
+        public DicomJElement()
+        {
+        }
 
         public String GetString(int index = 0)
         {
