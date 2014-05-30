@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Web;
+using System.Web.Util;
 using Dicom;
 using Dicom.IO.Buffer;
 
@@ -108,6 +110,7 @@ namespace JsonConverter
                 v.Append(_crlf);
                 string vr = element.ValueRepresentation.ToString();
                 bool isString = element.ValueRepresentation.IsString;
+                if (vr == "AT") isString = true;
                 v.AppendFormat("{0}{1}:{2},", Indent, EnQuote("vr"), EnQuote(vr));
                 v.Append(_crlf);
                 v.AppendFormat("{0}{1}:", Indent, EnQuote("Values"));
@@ -285,7 +288,12 @@ namespace JsonConverter
 
             private static string EnQuote(String v)
             {
-                return "\"" + v.Replace("\"", "&quot;") + "\"";
+                if (v.Contains("\\"))
+                {
+                    v = v.Replace("\\", "\\\\");
+                }
+                var v2 = HttpUtility.HtmlDecode(v);
+                return "\"" + v2 + "\"";
             }
 
             public override string ToString()
