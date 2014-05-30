@@ -34,12 +34,14 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Dicom, Version=1.0.36.0, Culture=neutral, PublicKeyToken=3a13f649e28eb09a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\LuryApiService\packages\fo-dicom.1.0.37\lib\net40\Dicom.dll</HintPath>
+    <Reference Include="Dicom">
+      <HintPath>..\packages\fo-dicom.1.0.37\lib\net40\Dicom.dll</HintPath>
     </Reference>
     <Reference Include="Dicom.Native">
-      <HintPath>..\..\LuryApiService\packages\fo-dicom.1.0.37\lib\net40\Dicom.Native.dll</HintPath>
+      <HintPath>..\packages\fo-dicom.1.0.37\lib\net40\Dicom.Native.dll</HintPath>
+    </Reference>
+    <Reference Include="Dicom.Native64">
+      <HintPath>..\packages\fo-dicom.1.0.37\lib\net40\Dicom.Native64.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\StoneBridge\SBServerLib\packages\Newtonsoft.Json.5.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
