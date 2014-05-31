@@ -11,9 +11,6 @@ I request that if you find a bug, issues or suggestions, please file a report on
 
 To Build:
 
-Download fo-dicom from https://github.com/rcd/fo-dicom
-
-Place the fo-dicom and the CSharpDicomJsonConverter directories are under the root.
-         
-Doing so should allow the Visual Studio (2010) solution to load fo-dicom and this project without a need to change the project layout.
+Use the Visual Studio 2013
+Add NuGet so that fo-dicom is pulled from the NuGet system.
 
